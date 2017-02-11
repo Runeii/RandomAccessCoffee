@@ -62,9 +62,13 @@ header {
   height: 4rem;
   overflow: hidden;
   border-bottom: 1px solid rgba(0, 0, 0, 0.37);
+  display: -webkit-box;
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+          flex-direction: row;
+  -webkit-box-align: center;
+          align-items: center;
   position: relative; }
   header h1 {
     text-transform: uppercase; }
@@ -80,29 +84,37 @@ header {
     border-left: 1px solid grey; }
     header #status-indicator li {
       position: relative;
-      animation: status-enter 1s ease-in; }
+      -webkit-animation: status-enter 1s ease-in;
+              animation: status-enter 1s ease-in; }
       header #status-indicator li:not(:first-child) {
         width: 0px; }
 
 #app {
   height: calc(100vh - 4rem);
   overflow: scroll;
+  display: -webkit-box;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  -webkit-box-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+          align-items: center;
   text-align: center;
   font-size: 2.6rem;
   line-height: 1.65;
   opacity: 1;
-  transition: 0.5s opacity; }
+  -webkit-transition: 0.5s opacity;
+          transition: 0.5s opacity; }
   #app button {
     opacity: 1;
-    transition: 0.5s opacity; }
+    -webkit-transition: 0.5s opacity;
+            transition: 0.5s opacity; }
   #app .search-results {
     display: none;
     max-width: 750px;
     width: 100%;
-    flex-direction: row;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+            flex-direction: row;
     flex-wrap: wrap;
     height: 100%; }
     #app .search-results li {
@@ -118,7 +130,8 @@ header {
       #app .search-results li .picture {
         width: 100%;
         height: 350px;
-        object-fit: cover;
+        -o-object-fit: cover;
+           object-fit: cover;
         position: relative;
         overflow: hidden; }
         #app .search-results li .picture.noimage {
@@ -137,7 +150,14 @@ header {
   .searchReady #app .welcome {
     display: none; }
   .searchReady #app .search-results {
+    display: -webkit-box;
     display: flex; }
+
+@-webkit-keyframes status-enter {
+  0% {
+    left: 200%; }
+  100% {
+    left: 0%; } }
 
 @keyframes status-enter {
   0% {

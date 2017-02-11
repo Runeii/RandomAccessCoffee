@@ -1,36 +1,54 @@
 'use strict';
 
 var resultContainer = document.querySelector('ul.search-results');
-var statusIndicator = document.getElementById("status-indicator");
 var placesService = new google.maps.places.PlacesService(document.createElement('div'));
+var debug = true;
 
 function searchForCoffee() {
-    //Style body to indicate loading
-    document.body.classList.add('resultsLoading');
-    updateStatus('Geolocation: Getting location...'); //Debug
-    //Get user location
-    getLocation(function (location) {
-        updateStatus('Geolocation: Locked location. Contacting Google...');
+    document.body.classList.add('searchStarted');
+    updateStatus('Geolocation: Getting location...');
+    getLocation().then(function (location) {
 
-        //Let's get results for location
-        document.body.classList.add('resultsPending');
-        getResults(location, function (data) {
-            updateStatus('Google API: Got results');
+        updateStatus('Geolocation: Locked location.');
+        updateStatus('Foursquare: Getting results...');
 
-            //Let's get additional details for each and add to page
-            data.forEach(function (element) {
-                getDetails(element, function (details) {
-                    resultContainer.insertAdjacentHTML('beforeend', buildSearchResult(details));
-                    console.log(details);
-                });
-
-                //Once complete, add class to body for styling
-                if (i == Object.keys(data).length - 1) {
-                    document.body.classList.add('resultsVisible');
-                }
+        getResultsKeyword(location).then(function (results1) {
+            updateStatus('Foursquare: Got results 50%');
+            getResultsCategory(location).then(function (results2) {
+                updateStatus('Foursquare: Got results 100%.');
+                var results = Object.assign(results1, results2);
+                console.log(results);
+                populateResults(results);
+            }).catch(function (reason) {
+                updateStatus('Error: Unable to obtain results (Failed > 50%)');
             });
+        }).catch(function (reason) {
+            updateStatus('Error: Unable to obtain results (Failed < 50%)');
         });
+    }).catch(function (reason) {
+        updateStatus('Error: Browser doesn\'t support location!');
     });
+}
+
+function populateResults(results) {
+    document.body.classList.add('searchFinished');
+    var details = [];
+    updateStatus('Foursquare: Getting more details for each business');
+
+    for (var i = 0, len = results.length; i < len; i++) {
+        details.push(getBusinessDetails(results[i].id));
+    }
+    Promise.all(details).then(function (values) {
+        document.body.classList.add('searchReady');
+        for (var i = 0, len = values.length; i < len; i++) {
+            console.log(values[i]);
+            updateStatus('Building: Result ' + (i + 1) + ' of ' + values.length);
+            buildSearchResult(values[i]);
+        }
+    }); /*
+        .catch(function(reason){
+         updateStatus('Error: Failed to obtain details');
+        });*/
 }
 
 /*
@@ -38,62 +56,93 @@ function searchForCoffee() {
 // Functions
 //
 */
-function getLocation(callback) {
-    if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-            var location = { lat: position.coords.latitude, lng: position.coords.longitude };
-            //var location = { lat: 51.5106143, lng: -0.1317967};
-            callback(location);
-        });
-    } else {
-        console.log('Error! Browser doesn\'t support location! :(');
-    }
+function getLocation() {
+    return new Promise(function (resolve, reject) {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                var location = { lat: position.coords.latitude, lng: position.coords.longitude };
+                resolve(location);
+            });
+        } else {
+            reject();
+        }
+    });
 }
 
-function getResults(location, callback) {
-    var url = 'https://api.foursquare.com/v2/venues/search?v=20170211&radius=1000&client_id=X4AF4YA42QRUWO5ERQCZOWMU5ZXGDWUUH5VGSK4FILGPAA14&client_secret=ZIGCEHQ5SOXVXAWJZLHCR2UDUN43VWIQWY4N1YUYSLDA22VM';
-    var results;
-    $.getJSON(url + '&intent=browse&query=coffee&ll=' + location.lat + ',' + location.lng, function (data) {
-        results = data.response.venues;
-        $.getJSON(url + '&intent=browse&categoryId=4bf58dd8d48988d1e0931735,56aa371be4b08b9a8d5734c1,5665c7b9498e7d8a4f2c0f06,4bf58dd8d48988d16d941735,4bf58dd8d48988d128941735,56aa371be4b08b9a8d573508&ll=' + location.lat + ',' + location.lng, function (data) {
-            Object.assign(results, data.response.venues);
-            console.log(results);
+var foursquareAjaxUrl = 'https://api.foursquare.com/v2/venues/search?v=20170211&radius=1000&client_id=X4AF4YA42QRUWO5ERQCZOWMU5ZXGDWUUH5VGSK4FILGPAA14&client_secret=ZIGCEHQ5SOXVXAWJZLHCR2UDUN43VWIQWY4N1YUYSLDA22VM';
+function getResultsKeyword(location) {
+    return new Promise(function (resolve, reject) {
+        $.getJSON(foursquareAjaxUrl + '&intent=browse&query=coffee&ll=' + location.lat + ',' + location.lng, function (data) {
+            resolve(data.response.venues);
+        });
+    });
+}
+function getResultsCategory(location) {
+    return new Promise(function (resolve, reject) {
+        $.getJSON(foursquareAjaxUrl + '&intent=browse&categoryId=4bf58dd8d48988d1e0931735,56aa371be4b08b9a8d5734c1,5665c7b9498e7d8a4f2c0f06,4bf58dd8d48988d16d941735,4bf58dd8d48988d128941735,56aa371be4b08b9a8d573508&ll=' + location.lat + ',' + location.lng, function (data) {
+            resolve(data.response.venues);
+        });
+    });
+}
+function getBusinessDetails(business) {
+    return new Promise(function (resolve, reject) {
+        $.getJSON('https://api.foursquare.com/v2/venues/' + business + '?v=20170211&client_id=X4AF4YA42QRUWO5ERQCZOWMU5ZXGDWUUH5VGSK4FILGPAA14&client_secret=ZIGCEHQ5SOXVXAWJZLHCR2UDUN43VWIQWY4N1YUYSLDA22VM&', function (data) {
+            resolve(data.response.venue);
         });
     });
 }
 
 function getDetails(data, callback) {
+    //Let's get additional details for each and add to page
+    data.forEach(function (element) {
+        getDetails(element, function (details) {
+            resultContainer.insertAdjacentHTML('beforeend', buildSearchResult(details));
+            console.log(details);
+        });
+
+        //Once complete, add class to body for styling
+        if (i == Object.keys(data).length - 1) {
+            document.body.classList.add('resultsVisible');
+        }
+    });
     placesService.getDetails(data, callback);
 }
 
 function buildSearchResult(place) {
-    var string;
-    if ('opening_hours' in place && place.opening_hours.open_now === true) {
-        string += '<li class="open" data-rating="' + place.rating + '">';
+    var string = '';
+    if ('hours' in place) {
+        if (place.hours.isOpen === true) {
+            string += '<li class="open" data-rating="' + place.likes.count + '">';
+        } else {
+            string += '<li class="closed" data-rating="' + place.likes.count + '">';
+        }
     } else {
-        string += '<li class="closed" data-rating="' + place.rating + '">';
+        string += '<li class="unconfirmed" data-rating="' + place.likes.count + '">';
     }
-    if ('photos' in place) {
-        string += '<img src="' + place.photos[0].getUrl({ maxWidth: 400 }) + '" />';
+    if ('bestPhoto' in place) {
+        string += '<div class="picture"><img src="' + place.bestPhoto.prefix + place.bestPhoto.width + 'x' + place.bestPhoto.height + place.bestPhoto.suffix + '" /></div>';
     } else {
-        string += '<img src="blank" />';
+        string += '<div class="picture noimage"></div>';
     }
     string += '<h3>' + place.name + '</h3>';
-    if ('reviews' in place) {
-        string += '<p>' + place.reviews[0].text + '</p>';
+    if (place.tips.count > 1) {
+        string += '<p>' + place.tips.items[0].text + '</p>';
     } else {
-        string += '<p>No reviews</p>';
+        string += '<p>No tips</p>';
     }
-    if ('website' in place) {
-        string += '<a href="' + place.website + '">Visit online</a></li>';
+    if ('url' in place) {
+        string += '<a href="' + place.url + '">Visit online</a></li>';
     } else {
         string += '<a href="#" class="nosite">No website</a></li>';
     }
-    return string;
+    resultContainer.insertAdjacentHTML('beforeend', string);
 }
 
 function updateStatus(message) {
-    if (statusIndicator !== null) {
-        statusIndicator.insertAdjacentHTML('beforeend', '<li>' + message + '</li>');
+    if (debug === true) {
+        var statusIndicator = document.getElementById("status-indicator");
+        if (statusIndicator !== null) {
+            statusIndicator.insertAdjacentHTML('afterbegin', '<li>' + message + '</li>');
+        }
     }
 }

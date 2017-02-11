@@ -26,13 +26,12 @@
             <ul id="status-indicator"></ul>
         </header>
         <div id="app">
-            <span>
-                <p>Bored of your usual spot?</p>
-                <p>Want good coffee nearby?</p>
+            <div class="welcome">
+                <p class="message">Bored of your usual spot? <br />Want good coffee nearby?</p>
                 <button onclick="searchForCoffee(); console.log('Clicked');">Get me coffee</button>
-            </span>
+            </div>
+            <ul class="search-results"></ul>
         </div>
-        <ul class="search-results"></ul>
         <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2-zcz6NGpntMyNHCqhEuQyoPcPMqFUKk&libraries=places"></script>
         <script src="assets/js/scripts-min.js"></script>
         <script id="__bs_script__">//<![CDATA[
