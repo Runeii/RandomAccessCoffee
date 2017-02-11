@@ -1,24 +1,32 @@
 var resultContainer = document.querySelector('ul.search-results');
 var statusIndicator = document.getElementById("status-indicator");
-placesService = new google.maps.places.PlacesService(document.createElement('div'));
+var placesService = new google.maps.places.PlacesService(document.createElement('div'));
 
 function searchForCoffee(){
+    //Style body to indicate loading
     document.body.classList.add('resultsLoading');
-    updateStatus('Geolocation: Getting location...');
+    updateStatus('Geolocation: Getting location...'); //Debug
+    //Get user location
     getLocation(function(location){
         updateStatus('Geolocation: Locked location. Contacting Google...');
+
+        //Let's get results for location
         document.body.classList.add('resultsPending');
         getResults(location, function(data){
             updateStatus('Google API: Got results');
-            for(let i of Object.keys(data)) {
-                getDetails(data[i],function(details){
+
+            //Let's get additional details for each and add to page
+            data.forEach(function(element){
+                getDetails(element,function(details){
                     resultContainer.insertAdjacentHTML('beforeend', buildSearchResult(details));
                     console.log(details);
                 });
+
+                //Once complete, add class to body for styling
                 if(i == (Object.keys(data).length -1)) {
                     document.body.classList.add('resultsVisible');
                 }
-            }
+            });
         });
     });
 }
@@ -41,15 +49,14 @@ function getLocation(callback) {
 }
 
 function getResults(location, callback){
-    var keyword_request = {
-        location: location,
-        radius: '1000',
-        keyword: "(coffee) OR (cafe) OR (breakfast) OR (tea)",
-        rankby: 'distance',
-    };
-
-    placesService.nearbySearch(keyword_request, function(data){
-        callback(data);
+    var url = 'https://api.foursquare.com/v2/venues/search?v=20170211&radius=1000&client_id=X4AF4YA42QRUWO5ERQCZOWMU5ZXGDWUUH5VGSK4FILGPAA14&client_secret=ZIGCEHQ5SOXVXAWJZLHCR2UDUN43VWIQWY4N1YUYSLDA22VM';
+    var results;
+    $.getJSON(url + '&intent=browse&query=coffee&ll='+location.lat +',' + location.lng, function(data){
+        results = data.response.venues;
+        $.getJSON(url + '&intent=browse&categoryId=4bf58dd8d48988d1e0931735,56aa371be4b08b9a8d5734c1,5665c7b9498e7d8a4f2c0f06,4bf58dd8d48988d16d941735,4bf58dd8d48988d128941735,56aa371be4b08b9a8d573508&ll='+location.lat +',' + location.lng, function(data){
+            Object.assign(results, data.response.venues);
+            console.log(results);
+        });
     });
 }
 
@@ -58,10 +65,11 @@ function getDetails(data, callback){
 }
 
 function buildSearchResult(place){
-    if('opening_hours' in place && place.opening_hours.open_now == true){
-        var string = `<li class="open" data-rating="${place.rating}">`;
+    var string;
+    if('opening_hours' in place && place.opening_hours.open_now === true){
+        string += `<li class="open" data-rating="${place.rating}">`;
     } else {
-        var string = `<li class="closed" data-rating="${place.rating}">`;
+        string += `<li class="closed" data-rating="${place.rating}">`;
     }
     if('photos' in place) {
         string += `<img src="${place.photos[0].getUrl({maxWidth : 400})}" />`;
