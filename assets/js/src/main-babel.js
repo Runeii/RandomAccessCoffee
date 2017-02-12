@@ -61,6 +61,7 @@ function getLocation() {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(function (position) {
                 var location = { lat: position.coords.latitude, lng: position.coords.longitude };
+                //var location = { lat: '51.589164', lng: '-0.021561'};
                 resolve(location);
             });
         } else {
@@ -126,7 +127,7 @@ function buildSearchResult(place) {
     }
     string += '<h3>' + place.name + '</h3>';
     if (place.tips.count > 1) {
-        string += '<p>' + place.tips.items[0].text + '</p>';
+        string += '<p>' + place.tips.groups[0].items[0].text + '</p>';
     } else {
         string += '<p>No tips</p>';
     }
