@@ -3,7 +3,7 @@
     <template>
       <transition name="fade" mode="out-in">
         <div class="layout-view" v-if="results.length == 0" key="home">
-          <video-bg :sources="['/statics/background.mp4']">
+          <video-bg :sources="['http://www.randomaccesscoffee.com/statics/background.mp4']" id="background">
             <h1>_Random Access Coffee</h1>
             <p class="status">{{loadingMessage}}</p>
             <button class="circular loading disabled" v-if="(geolocation == null || googleMaps == null)"><i class="item-primary">autorenew</i></button>
@@ -123,6 +123,9 @@ h1 {
 }
 .results {
   padding:1rem;
+}
+.VideoBg {
+  background-color: #22264b;
 }
 .VideoBg__content {
   position:absolute;

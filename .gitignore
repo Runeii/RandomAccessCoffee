@@ -5,3 +5,4 @@
 /node_modules/*
 /cordova/platforms
 /cordova/node_modules
+!.apk
