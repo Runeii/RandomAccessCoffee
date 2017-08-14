@@ -3,3 +3,5 @@
 *.scssc
 /node_modules
 /node_modules/*
+/cordova/platforms
+/cordova/node_modules

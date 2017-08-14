@@ -1,6 +1,19 @@
-# RandomAccessCoffee
-Bored of your usual coffee spots? Let us suggest somewhere new to visit.
+# Quasar App
 
-#Current status
-Pre-alpha proof of concept can be found live at http://www.randomaccesscoffee.com.
-NB: I genuinely wouldn't.
+> A Quasar project
+
+## Build Setup
+
+``` bash
+# install dependencies
+$ npm install
+
+# serve with hot reload at localhost:8080
+$ quasar dev
+
+# build for production with minification
+$ quasar build
+
+# lint code
+$ quasar lint
+```
